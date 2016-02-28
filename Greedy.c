@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <cs50.h>    //library provided by cs50
 #include <math.h>
