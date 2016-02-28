@@ -1,4 +1,184 @@
 Dictionary Spell Checker using Hash Tables
+compile using makefile keeping all the below files in same directory.
+
+*************************** dictionary.h *********************************************
+
+#ifndef DICTIONARY_H
+#define DICTIONARY_H
+
+#include <stdbool.h>
+
+// maximum length for a word
+// (e.g., pneumonoultramicroscopicsilicovolcanoconiosis)
+#define LENGTH 45
+
+/**
+ * Returns true if word is in dictionary else false.
+ */
+bool check(const char* word);
+
+/**
+ * Loads dictionary into memory.  Returns true if successful else false.
+ */
+bool load(const char* dictionary);
+typedef struct node
+{
+   char word[46];
+   struct node* next;
+}
+node;
+
+/**
+ * Returns number of words in dictionary if loaded else 0 if not yet loaded.
+ */
+unsigned int size(void);
+
+/**
+ * Unloads dictionary from memory.  Returns true if successful else false.
+ */
+bool unload(void);
+
+#endif // DICTIONARY_H
+
+************************************* end of dictionary.h **************************************
+
+*************************** dictionary.c ********************************************
+
+#include <string.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include "dictionary.h"
+#include <ctype.h>
+
+node* hashtable[784];
+int r=0;
+
+int hash(char* key)
+{
+ int l;
+ if(key[1]=='\0')
+ {
+ l=0;
+ }
+ else if(isalpha(key[1]))
+ {
+ l=key[1]-'a'+2;
+ }
+ else
+ {
+ l=1;
+ }
+ int t=(key[0]-'a')*28+l;
+ return t;
+}
+/**
+ * Returns true if word is in dictionary else false.
+ */
+bool check(const char* word)
+{
+    // TODO    
+    int l=strlen(word);
+    char input[l];
+    for(int i=0;i<l+1;i++)
+    {
+    input[i]=tolower(word[i]);
+    }    
+    int k=hash(input);
+    node* ptr=hashtable[k];
+    if(input[1]=='\0')
+    {
+    if(ptr!=NULL)
+    {
+    return true;
+    }
+    return false;
+    }
+    while(ptr!=NULL)
+    {       
+      if((ptr->word[2]==input[2])&&(strlen(ptr->word)==l))
+      {
+      if(l==3||l==2)
+      {
+      return true;
+      }
+      else
+      {
+      if(strcmp(ptr->word,input)==0)
+      {
+      return true;
+      }
+      }
+      }
+      ptr=ptr->next;
+    }
+    return false;
+}
+
+/**
+ * Loads dictionary into memory.  Returns true if successful else false.
+ */
+bool load(const char* dictionary)
+{
+    // TODO
+    FILE* fp=fopen(dictionary,"r");
+    int load=0;
+    char output[46];
+    for(int i=0;!feof(fp);i++)
+    {
+    node* nodei=malloc(sizeof(node));
+    fscanf(fp,"%s",output);
+    strcpy(nodei->word,output);
+    int k = hash(output);
+    nodei->next=hashtable[k];
+    hashtable[k]=nodei;
+    load++;
+    }
+    fclose(fp);  
+    r=load-1; 
+    if(r>0)
+    {
+    return true;
+    }
+    else
+    {
+    return false;
+    }
+}
+/**
+ * Returns number of words in dictionary if loaded else 0 if not yet loaded.
+ */
+unsigned int size(void)
+{
+    // TODO
+    int t=r;
+    return t;
+}
+
+/**
+ * Unloads dictionary from memory.  Returns true if successful else false.
+ */
+bool unload(void)
+{
+    // TODO
+    int n=0;
+    for(int p=0;p<784;p++)
+    {
+    node* cursor=hashtable[p];
+    while(cursor!=NULL)
+    {
+      node*temp=cursor;
+      cursor=cursor->next;
+      free(temp);
+    }
+    n=p+1;
+    }
+    if(n==784)
+      return true;
+    else
+      return false;
+}
+******************************** end of dictionary.c **************************************
 
 ************************* speller.c **********************************************
 #include <ctype.h>
@@ -194,3 +374,43 @@ double calculate(const struct rusage* b, const struct rusage* a)
                 / 1000000.0);
     }
 }
+
+********************* end of speller.c ********************************************
+
+********************** MakeFile *************************************************
+
+# compiler to use
+CC = clang
+
+# flags to pass compiler
+CFLAGS = -ggdb3 -O0 -Qunused-arguments -std=c99 -Wall -Werror
+
+# name for executable
+EXE = speller
+
+# space-separated list of header files
+HDRS = dictionary.h
+
+# space-separated list of libraries, if any,
+# each of which should be prefixed with -l
+LIBS =
+
+# space-separated list of source files
+SRCS = speller.c dictionary.c
+
+# automatically generated list of object files
+OBJS = $(SRCS:.c=.o)
+
+
+# default target
+$(EXE): $(OBJS) $(HDRS) Makefile
+	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LIBS)
+
+# dependencies 
+$(OBJS): $(HDRS) Makefile
+
+# housekeeping
+clean:
+	rm -f core $(EXE) *.o
+	
+***************************************** end of MakeFile ********************************************
